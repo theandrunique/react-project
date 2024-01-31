@@ -29,6 +29,7 @@ function App() {
         
         new_message.key = messages.length + 1;
         setMessages([...messages, new_message]);
+        console.log(messages);
     };
 
     function handleEnterKeyDown(e) {
@@ -39,13 +40,48 @@ function App() {
         }
     }
     
-    function sendMessage(){
-        if (messageText.trim().length === 0){
+    async function sendMessage(){
+        if (messageText.trim().length === 0 && files.length === 0){
             return;
         }
-        socket.send(JSON.stringify({ "message_text": messageText.trim() }));
-     
-        setMessageText("");
+
+        if (files.length > 0) {
+            const formData = new FormData();
+
+            files.forEach((file, index) => {
+                formData.append(`file`, file);
+            });
+    
+            fetch('http://localhost:8000/file/uploadfile/', {
+                method: 'POST',
+                body: formData,
+                mode: 'cors',
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json()
+                }
+            })
+            .then(data => {
+                socket.send(JSON.stringify({
+                    "message_text": messageText.trim(),
+                    "attachments": [data]
+                }));
+
+                setFiles([]);
+                setMessageText("");
+            })
+            .catch(error => {
+                console.error('Произошла ошибка при отправке файлов:', error);
+            });
+        } else {
+            socket.send(JSON.stringify({
+                "message_text": messageText.trim(),
+                "attachments": []
+            }));
+            setMessageText("");
+        };
+
     }
 
     function dragStartHandler(e){
@@ -81,17 +117,19 @@ function App() {
                 <div className='text-center flex flex-col p-5 h-full w-full max-w-screen-md'>
                     <ScrollArea className='p-5 mb-3 flex-grow border rounded-md'>
                         {/* <Message /> */}
-                        {messages.map((message) => (
-                            message.message_text ? <Message 
-                            key={message.key}
-                            message_text={message.message_text}
-                            sender_id={message.from_id}
-                            time={message.sended_at} 
-                            /> 
-                            :  <Notification
-                                notification_text={ message.notification_text }
-                                />
-                            ))}
+                        {
+                            messages.map((message) => (
+                                message.notification_text ? <Notification notification_text={ message.notification_text }/>
+                                : 
+                                <Message 
+                                    key={message.key}
+                                    message_text={message.message_text}
+                                    sender_id={message.from_id}
+                                    time={message.sended_at} 
+                                    attachments={message.attachments}
+                                /> 
+                            ))
+                        }
                     </ScrollArea>
                     {
                         drag ? 
@@ -116,13 +154,14 @@ function App() {
                         </div>
                     }
                     {
-                        files.length !== 0 ? <div className='flex flex-row space-x-3 text-slate-500 m-5'>
+                        files.length !== 0 && 
+                        <div className='flex flex-row space-x-3 text-slate-500 m-5'>
                             {
                                 files.map((file, index) => (
                                     <div>{file.name}<Button className='text-slate-500 font-bold' onClick={ (e) => { removeFile(index) } }>del</Button></div>
                                 ))
                             }
-                        </div> : <div></div>
+                        </div>
                     }
                 </div>
             </div>

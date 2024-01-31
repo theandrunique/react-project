@@ -1,7 +1,13 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import photo from "./assets/walrus.jpg"
 
-export default function Message({ message_text, sender_id, time }){
+
+function isImage(attachment) {
+    return attachment.type.startsWith('image/');
+}
+
+
+export default function Message({ message_text, sender_id, time, attachments }){
 
     return (
         <div className="bg-slate-800 text-slate-400 mb-3 p-3 border rounded-3xl h-auto  flex flex-row space-x-3">
@@ -17,6 +23,22 @@ export default function Message({ message_text, sender_id, time }){
                 <div className="h-full w-full whitespace-pre-wrap text-start break-all">
                     { message_text }
                 </div>
+                {
+                    attachments.length !== 0 &&
+                    <div className="space-x-3">
+                        {attachments.map((attach, index) => (
+                            <div key={index} className="flex font-sans">
+                                {isImage(attach) ? (
+                                    <img src={attach.url} alt={attach.filename} />
+                                ) : (
+                                    <a href={attach.url} target="_blank" rel="noopener noreferrer">
+                                        {attach.filename}
+                                    </a>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                }
             </div>
         </div>
     )
