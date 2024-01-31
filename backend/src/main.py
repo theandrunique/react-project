@@ -1,11 +1,23 @@
+import logging
 import time
 from uuid import uuid4
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
-from fastapi.datastructures import State
-import uvicorn
+from fastapi.middleware.cors import CORSMiddleware
+
+from drive_api import router as drive_router
+
 
 app = FastAPI()
+app.include_router(drive_router)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 def generate_random_id():
@@ -40,7 +52,7 @@ class ConnectionManager:
                     {"notification_text": message}
                 )
 
-    async def broadcast_message(self, from_id: int, message_text: str):
+    async def broadcast_message(self, from_id: int, message_text: str, attachments: list):
         sended_at = int(time.time())
 
         for user_id in self.active_connections.keys():
@@ -49,6 +61,7 @@ class ConnectionManager:
                     "from_id": from_id,
                     "message_text": message_text,
                     "sended_at": sended_at,
+                    "attachments": attachments
                 }
             )
 
@@ -66,14 +79,18 @@ async def websocket_endpoint(websocket: WebSocket):
 
     try:
         while True:
-            message = await websocket.receive_json()
+            message: dict = await websocket.receive_json()
 
             await manager.broadcast_message(
                 from_id=user_id,
                 message_text=message["message_text"],
+                attachments= message.get("attachments", [])
             )
 
     except WebSocketDisconnect:
         await manager.disconnect(user_id)
 
         await manager.broadcast_notification(f"User {user_id} left the chat", user_id)
+        
+        
+
