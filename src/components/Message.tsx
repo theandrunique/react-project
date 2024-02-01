@@ -18,7 +18,6 @@ export interface IMessage {
 }
 
 
-
 function isImage(attachment: IAttachment) {
     return attachment.type.startsWith('image/');
 }

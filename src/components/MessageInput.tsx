@@ -92,7 +92,16 @@ export default function MessageInput({ sendMessage }: MessageInputProps) {
                 <div className='flex flex-row space-x-3 text-slate-500 m-5'>
                     {
                         files.map((file, index) => (
-                            <div>{file.name}<Button className='text-slate-500 font-bold' onClick={ () => { removeFile(index) } }>del</Button></div>
+                            <div key={index}>
+                                {file.name}
+                                <Button 
+                                    className='text-slate-500 font-bold' 
+                                    value="del" 
+                                    onClick={ () => { removeFile(index) } }
+                                >
+                                    del
+                                </Button>
+                            </div>
                         ))
                     }
                 </div>

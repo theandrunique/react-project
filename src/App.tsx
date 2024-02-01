@@ -53,7 +53,7 @@ function App() {
                         {
                             messages.map((message, index) => (
                                 message.is_notification ? 
-                                <Notification notification_text={ message.message_text }/>
+                                <Notification key={index} notification_text={ message.message_text }/>
                                 : 
                                 <Message 
                                         key={index}
