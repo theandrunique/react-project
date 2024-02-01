@@ -18,13 +18,13 @@ function App() {
 
     socket.onmessage = (event) => {
         const new_message = JSON.parse(event.data);
-
-        setMessages([...messages, new_message]);
+        setMessages([...messages, ...new_message.messages]);
         console.log(messages);
     };
     
     async function sendMessage(messageText: string, files: File[]){
         const sendedAttachments: IAttachment[] = [];
+
         if (files.length > 0) {
             const formData = new FormData();
             files.map((file) => {

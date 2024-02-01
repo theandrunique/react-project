@@ -11,10 +11,10 @@ export interface IAttachment {
 
 export interface IMessage {
     message_text: string
-    from_id: string
+    from_id?: string
     time: number
     attachments: IAttachment[]
-    is_notification: boolean
+    is_notification?: boolean
 }
 
 
