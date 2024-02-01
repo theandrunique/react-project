@@ -23,15 +23,13 @@ if not os.path.exists("files"):
 
 @router.post("/uploadfile/")
 async def upload_file(
-    file: Annotated[UploadFile, File()],
+    # file: Annotated[UploadFile, File()],
+    files: list[UploadFile],
 ):
-    await upload_file_to_dir(file=file)
+    for file in files:
+        await upload_file_to_dir(file=file)
 
-    return {
-        "url": f"http://localhost:8000/file/{file.filename}",
-        "filename": file.filename,
-        "type": file.content_type, 
-    }
+    return [ { "url": f"http://localhost:8000/file/{file.filename}", "filename": file.filename, "type": file.content_type } for file in files]
 
 
 @router.get("/{file_name}/")

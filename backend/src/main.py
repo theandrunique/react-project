@@ -43,16 +43,26 @@ class ConnectionManager:
         self.active_connections.pop(client_id)
 
     async def send_personal_notification(self, message: str, websocket: WebSocket):
-        await websocket.send_json({"notification_text": message})
+        await websocket.send_json(
+            {
+                "message_text": message,
+                "is_notification": True,
+            }
+        )
 
     async def broadcast_notification(self, message: str, exclude: str):
         for user_id in self.active_connections.keys():
             if user_id != exclude:
                 await self.active_connections[user_id].send_json(
-                    {"notification_text": message}
+                    {
+                        "message_text": message,
+                        "is_notification": True,
+                    }
                 )
 
-    async def broadcast_message(self, from_id: int, message_text: str, attachments: list):
+    async def broadcast_message(
+        self, from_id: int, message_text: str, attachments: list
+    ):
         sended_at = int(time.time())
 
         for user_id in self.active_connections.keys():
@@ -61,7 +71,8 @@ class ConnectionManager:
                     "from_id": from_id,
                     "message_text": message_text,
                     "sended_at": sended_at,
-                    "attachments": attachments
+                    "attachments": attachments,
+                    "is_notification": False,
                 }
             )
 
@@ -84,13 +95,10 @@ async def websocket_endpoint(websocket: WebSocket):
             await manager.broadcast_message(
                 from_id=user_id,
                 message_text=message["message_text"],
-                attachments= message.get("attachments", [])
+                attachments=message.get("attachments", []),
             )
 
     except WebSocketDisconnect:
         await manager.disconnect(user_id)
 
         await manager.broadcast_notification(f"User {user_id} left the chat", user_id)
-        
-        
-
